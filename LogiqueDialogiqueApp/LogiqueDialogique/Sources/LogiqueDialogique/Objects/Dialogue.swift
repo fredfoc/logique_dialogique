@@ -21,7 +21,7 @@ public class Dialogue: CustomStringConvertible {
     private let rgOpposante: Int
     private var internalParties: [Partie] = []
     private var constants: [String]
-    
+
     public var parties: [Partie] {
         // If the proposant has a winning partie for which the opposante has no choices,
         // return only that partie (strategy found). Otherwise return all generated parties.
@@ -30,11 +30,11 @@ public class Dialogue: CustomStringConvertible {
         }
         return internalParties
     }
-    
 
     public init(assertion: String,
                 rgProposant: Int = 2,
-                rgOpposante: Int = 1) throws {
+                rgOpposante: Int = 1) throws
+    {
         let result = try evaluate(assertion)
         self.assertion = result.assertion
         constants = result.constants
@@ -65,7 +65,10 @@ public class Dialogue: CustomStringConvertible {
                                  expression: Expression(type: .regle,
                                                         proposition: Proposition(connecteur: .repetition(rgProposant)),
                                                         joueur: .Proposant))
-        Rules.dialogue([firstCoup, secondCoup, troisiemeCoup], &internalParties, constants: constants)
+        Rules.dialogue(self,
+                       [firstCoup, secondCoup, troisiemeCoup],
+                       &internalParties,
+                       constants)
     }
 
     public var hasStrategie: Bool {
@@ -81,6 +84,15 @@ public class Dialogue: CustomStringConvertible {
         }
 
         return false
+    }
+
+    func rangRepetition(_ joueur: Joueur) -> Int {
+        switch joueur {
+        case .Proposant:
+            return rgProposant
+        case .Opposante:
+            return rgOpposante
+        }
     }
 }
 
@@ -210,17 +222,17 @@ public class Partie: CustomStringConvertible, Identifiable {
     var isWinning: Bool {
         coups.filter { $0.isPerdu }.first?.isOpposante ?? false
     }
-    
+
     var opposanteHadChoices: Bool {
         opposanteHasChoice()
     }
 
-    // Extracted helper to detect whether the Opposante had a choice in the sequence of coups.
-    // Opposante has choices if she:
-    // - attacks a universel
-    // - attacks a disjonction
-    // - defends an existentiel
-    // - defends a disjonction
+    /// Extracted helper to detect whether the Opposante had a choice in the sequence of coups.
+    /// Opposante has choices if she:
+    /// - attacks a universel
+    /// - attacks a disjonction
+    /// - defends an existentiel
+    /// - defends a disjonction
     fileprivate func opposanteHasChoice() -> Bool {
         for c in coups where c.isOpposante {
             if c.isAttaque, let connecteur = c.expression.proposition.connecteur {
@@ -268,32 +280,39 @@ public class Partie: CustomStringConvertible, Identifiable {
 }
 
 public enum Rules {
-    static func dialogue(_ coups: [Coup], _ parties: inout [Partie], constants: [String]) {
+    static func dialogue(_ dialogue: Dialogue,
+                         _ coups: [Coup],
+                         _ parties: inout [Partie],
+                         _ constants: [String])
+    {
         let partie = Partie(index: parties.count + 1, coups: coups, constants: constants)
         parties.append(partie)
-        evaluatePartie(partie, &parties)
+        evaluate(dialogue, partie, &parties)
     }
 
-    static func newPartie(from partie: Partie, _ coup: Coup, _ parties: inout [Partie]) {
+    static func newPartie(from partie: Partie, _ dialogue: Dialogue, _ coup: Coup, _ parties: inout [Partie]) {
         let partie = Partie(index: parties.count + 1, coups: partie.coups, constants: partie.constants)
         parties.append(partie)
         partie.coups.append(coup)
         if coup.shouldBump {
             partie.bumpIndexVar()
         }
-        evaluatePartie(partie, &parties)
+        evaluate(dialogue, partie, &parties)
     }
 
-    static func evaluatePartie(_ partie: Partie, _ parties: inout [Partie]) {
-        var nextCoups = Rules.evaluateCoup(partie: partie)
+    static func evaluate(_ dialogue: Dialogue,
+                         _ partie: Partie,
+                         _ parties: inout [Partie])
+    {
+        var nextCoups = Rules.evaluateCoup(partie, dialogue)
         while !nextCoups.isEmpty {
             let nextCoup = nextCoups.removeFirst()
-            nextCoups.forEach { coup in newPartie(from: partie, coup, &parties) }
+            nextCoups.forEach { coup in newPartie(from: partie, dialogue, coup, &parties) }
             partie.coups.append(nextCoup)
             if nextCoup.shouldBump {
                 partie.bumpIndexVar()
             }
-            nextCoups = Rules.evaluateCoup(partie: partie)
+            nextCoups = Rules.evaluateCoup(partie, dialogue)
         }
         if let lastCoup = partie.coups.last {
             partie.coups.append(Coup(relatedStep: nil,
@@ -327,9 +346,9 @@ public enum Rules {
         }
     }
 
-    static func evaluateCoup(partie: Partie) -> [Coup] {
+    static func evaluateCoup(_ partie: Partie, _ dialogue: Dialogue) -> [Coup] {
         let coup = partie.coups.last!
-        let coups = answer(coup, partie: partie) + attack(coup, partie: partie)
+        let coups = answer(coup, partie, dialogue) + attack(coup, partie, dialogue)
         return socraticRule(coup.nextJoueur.isProposant,
                             coups: coups,
                             partie: partie)
@@ -393,12 +412,8 @@ public enum Rules {
         }
     }
 
-    static func answer(_ coup: Coup, partie: Partie) -> [Coup] {
-        partie.coups
-            .filter { $0.isSameJoueur(coup.expression.joueur) }
-            .compactMap { answer($0, partie: partie) }
-            .flatMap { $0 }
-            .filter { !partie.coups.contains($0) }
+    static func answer(_ coup: Coup, _ partie: Partie, _ dialogue: Dialogue) -> [Coup] {
+        verify(coup, partie, dialogue, answer)
     }
 
     static func attack(_ coup: Coup, partie: Partie) -> [Coup]? {
@@ -468,15 +483,27 @@ public enum Rules {
             return nil
         }
     }
-    
-    
 
-    static func attack(_ coup: Coup, partie: Partie) -> [Coup] {
+    static func attack(_ coup: Coup, _ partie: Partie, _ dialogue: Dialogue) -> [Coup] {
+        verify(coup, partie, dialogue, attack)
+    }
+
+    private static func verify(_ coup: Coup,
+                               _ partie: Partie,
+                               _ dialogue: Dialogue,
+                               _ method: (Coup, Partie) -> [Coup]?) -> [Coup]
+    {
         partie.coups
             .filter { $0.isSameJoueur(coup.expression.joueur) }
-            .compactMap { attack($0, partie: partie) }
+            .compactMap { method($0, partie) }
             .flatMap { $0 }
-            .filter { !partie.coups.contains($0) }
+            .filter { coupCanBePlayed(partie, $0, dialogue) }
+    }
+
+    static func coupCanBePlayed(_ partie: Partie, _ coup: Coup, _ dialogue: Dialogue) -> Bool {
+        let existingCount = partie.coups.filter { $0 == coup }.count
+        let repetitionRank = dialogue.rangRepetition(coup.expression.joueur)
+        return existingCount < repetitionRank
     }
 }
 

@@ -201,7 +201,7 @@ struct Test {
 
         #expect(partie.opposanteHadChoices)
     }
-    
+
     @Test func opposanteHadChoices_detecte_attaque_attaqueConjonctionGauche() {
         let p1 = Proposition(name: "P", variable: Variable(name: "x"))
         let p2 = Proposition(name: "Q", variable: Variable(name: "x"))
@@ -214,7 +214,6 @@ struct Test {
 
         #expect(partie.opposanteHadChoices)
     }
-
 
     @Test func opposanteHadChoices_detecte_defense_existentiel_et_disjonction() {
         // attaque existentiel puis defense par opposante
@@ -278,14 +277,14 @@ struct Test {
         let dialogue = try Dialogue(assertion: "(Pc1 ⇒ Qc1)")
         #expect(!dialogue.hasStrategie)
     }
-    
+
     @Test func dialogue_parties_condition1() throws {
         // partie gagnée par le proposant et opposante n'a aucun choix
         let dialogue = try Dialogue(assertion: "((Pc1 ∧ Qc1) ⇒ Qc1)")
         #expect(dialogue.hasStrategie)
         #expect(dialogue.parties.count == 1)
     }
-    
+
     @Test func dialogue_parties_condition2() throws {
         let dialogue = try Dialogue(assertion: "(∀x (Px ∧ Qx) ⇒ (Qc1 ∧ Pc1))")
         #expect(dialogue.parties.count > 1)

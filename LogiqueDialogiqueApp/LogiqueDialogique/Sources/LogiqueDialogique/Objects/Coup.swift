@@ -138,7 +138,7 @@ public extension Coup {
     var isAttaque: Bool {
         role.isAttack
     }
-    
+
     var isAttaqueNegation: Bool {
         guard isAttaque, let connecteur = expression.proposition.connecteur else {
             return false

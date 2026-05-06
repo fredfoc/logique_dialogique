@@ -10,37 +10,37 @@ import Foundation
 public indirect enum Connecteur: CustomStringConvertible, CustomDebugStringConvertible {
     public var debugDescription: String {
         switch self {
-        case .conjonction(_, _):
+        case .conjonction:
             "conjonction"
-        case .attaqueConjonctionDroite(_, _):
+        case .attaqueConjonctionDroite:
             "attaque Conjonction Droite"
-        case .attaqueConjonctionGauche(_, _):
+        case .attaqueConjonctionGauche:
             "attaque Conjonction Gauche"
-        case .disjonction(_, _):
+        case .disjonction:
             "disjonction"
-        case .attaqueDisjonction(_, _):
+        case .attaqueDisjonction:
             "attaque Disjonction"
-        case .negation(_):
+        case .negation:
             "negation"
-        case .attaqueNegation(_):
+        case .attaqueNegation:
             "attaque Negation"
-        case .implication(_, _):
+        case .implication:
             "impliquation"
-        case .attaqueImplication(_, _):
+        case .attaqueImplication:
             "attaque Implication"
-        case .universel(_, _):
+        case .universel:
             "universel"
-        case .attaqueUniversel(_, _):
+        case .attaqueUniversel:
             "attaque Universel"
-        case .existentiel(_, _):
+        case .existentiel:
             "existentiel"
-        case .attaqueExistentiel(_, _):
+        case .attaqueExistentiel:
             "attaque Existentiel"
         case .perdu:
             ""
         case .gagne:
             ""
-        case .repetition(_):
+        case .repetition:
             ""
         case .negationNoDefense:
             "-"
