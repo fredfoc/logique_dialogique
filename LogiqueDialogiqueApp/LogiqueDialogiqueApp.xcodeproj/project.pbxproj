@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9BFA37642FAB63470058774E /* LogiqueDialogique in Frameworks */ = {isa = PBXBuildFile; productRef = 9BFA37632FAB63470058774E /* LogiqueDialogique */; };
 		9BFC17292F644C3C00B34F0D /* LogiqueDialogique in Frameworks */ = {isa = PBXBuildFile; productRef = 9BFC17282F644C3C00B34F0D /* LogiqueDialogique */; };
 /* End PBXBuildFile section */
 
@@ -28,6 +29,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9BFC17292F644C3C00B34F0D /* LogiqueDialogique in Frameworks */,
+				9BFA37642FAB63470058774E /* LogiqueDialogique in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +73,7 @@
 			name = LogiqueDialogiqueApp;
 			packageProductDependencies = (
 				9BFC17282F644C3C00B34F0D /* LogiqueDialogique */,
+				9BFA37632FAB63470058774E /* LogiqueDialogique */,
 			);
 			productName = LogiqueDialogiqueApp;
 			productReference = 9BFC17192F644BF100B34F0D /* LogiqueDialogiqueApp.app */;
@@ -101,7 +104,7 @@
 			mainGroup = 9BFC17102F644BF100B34F0D;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				9BFC17272F644C3C00B34F0D /* XCLocalSwiftPackageReference "LogiqueDialogique" */,
+				9BFA37622FAB63470058774E /* XCLocalSwiftPackageReference "LogiqueDialogique" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9BFC171A2F644BF100B34F0D /* Products */;
@@ -343,13 +346,17 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		9BFC17272F644C3C00B34F0D /* XCLocalSwiftPackageReference "LogiqueDialogique" */ = {
+		9BFA37622FAB63470058774E /* XCLocalSwiftPackageReference "LogiqueDialogique" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = LogiqueDialogique;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		9BFA37632FAB63470058774E /* LogiqueDialogique */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LogiqueDialogique;
+		};
 		9BFC17282F644C3C00B34F0D /* LogiqueDialogique */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = LogiqueDialogique;

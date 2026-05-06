@@ -42,6 +42,8 @@ public indirect enum Connecteur: CustomStringConvertible, CustomDebugStringConve
             ""
         case .repetition(_):
             ""
+        case .negationNoDefense:
+            "-"
         }
     }
 
@@ -82,6 +84,8 @@ public indirect enum Connecteur: CustomStringConvertible, CustomDebugStringConve
             return "gagné"
         case let .repetition(value):
             return "rg\(value)"
+        case .negationNoDefense:
+            return "-"
         }
     }
 
@@ -114,6 +118,7 @@ public indirect enum Connecteur: CustomStringConvertible, CustomDebugStringConve
     case perdu
     case gagne
     case repetition(Int)
+    case negationNoDefense
 
     func evaluate(_ newVariable: Variable) -> Connecteur {
         switch self {
@@ -153,6 +158,8 @@ public indirect enum Connecteur: CustomStringConvertible, CustomDebugStringConve
             .gagne
         case let .repetition(value):
             .repetition(value)
+        case .negationNoDefense:
+            .negationNoDefense
         }
     }
 
@@ -203,7 +210,7 @@ public indirect enum Connecteur: CustomStringConvertible, CustomDebugStringConve
 
     var displayStep: Bool {
         switch self {
-        case .perdu, .gagne, .repetition:
+        case .perdu, .gagne, .negationNoDefense:
             false
         default:
             true

@@ -88,7 +88,7 @@ public struct Expression: Equatable, CustomStringConvertible {
 public struct Coup: CustomStringConvertible, Identifiable, Equatable {
     public let id: String = UUID().uuidString
     public static func == (lhs: Coup, rhs: Coup) -> Bool {
-        lhs.expression == rhs.expression && lhs.role == rhs.role
+        lhs.role == rhs.role && lhs.role == rhs.role
     }
 
     public let relatedStep: Int?
@@ -137,6 +137,16 @@ public extension Coup {
 
     var isAttaque: Bool {
         role.isAttack
+    }
+    
+    var isAttaqueNegation: Bool {
+        guard isAttaque, let connecteur = expression.proposition.connecteur else {
+            return false
+        }
+        if case .attaqueNegation = connecteur {
+            return true
+        }
+        return false
     }
 
     var isRegle: Bool {

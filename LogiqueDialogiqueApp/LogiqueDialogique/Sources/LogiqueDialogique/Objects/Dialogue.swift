@@ -17,6 +17,8 @@ public class Dialogue: CustomStringConvertible {
     }
 
     public let assertion: Proposition?
+    private let rgProposant: Int
+    private let rgOpposante: Int
     private var internalParties: [Partie] = []
     private var constants: [String]
     
@@ -30,10 +32,14 @@ public class Dialogue: CustomStringConvertible {
     }
     
 
-    public init(assertion: String) throws {
+    public init(assertion: String,
+                rgProposant: Int = 2,
+                rgOpposante: Int = 1) throws {
         let result = try evaluate(assertion)
         self.assertion = result.assertion
         constants = result.constants
+        self.rgOpposante = rgOpposante
+        self.rgProposant = rgProposant
         generate()
     }
 
@@ -51,13 +57,13 @@ public class Dialogue: CustomStringConvertible {
                               step: 1,
                               role: .unknown,
                               expression: Expression(type: .regle,
-                                                     proposition: Proposition(connecteur: .repetition(1)),
+                                                     proposition: Proposition(connecteur: .repetition(rgOpposante)),
                                                      joueur: .Opposante))
         let troisiemeCoup = Coup(relatedStep: 1,
                                  step: 2,
                                  role: .unknown,
                                  expression: Expression(type: .regle,
-                                                        proposition: Proposition(connecteur: .repetition(2)),
+                                                        proposition: Proposition(connecteur: .repetition(rgProposant)),
                                                         joueur: .Proposant))
         Rules.dialogue([firstCoup, secondCoup, troisiemeCoup], &internalParties, constants: constants)
     }
@@ -126,9 +132,17 @@ public class Partie: CustomStringConvertible, Identifiable {
         var currentCoups = Array(repeating: false, count: coups.count + 1)
         for coup in coups {
             if coup.isAttaque {
-                let associatedCoup = associatedAnswer(of: coup)
+                var associatedCoup = associatedAnswer(of: coup)
                 if let associatedCoup {
                     currentCoups[associatedCoup.step] = true
+                }
+                if coup.isAttaqueNegation {
+                    associatedCoup = Coup(relatedStep: nil,
+                                          step: 0,
+                                          role: .unknown,
+                                          expression: Expression(type: .regle,
+                                                                 proposition: Proposition(connecteur: .negationNoDefense),
+                                                                 joueur: coup.nextJoueur))
                 }
                 if coup.isOpposante {
                     lignes.append(Ligne(coup1: coup, coup2: associatedCoup))
@@ -211,7 +225,7 @@ public class Partie: CustomStringConvertible, Identifiable {
         for c in coups where c.isOpposante {
             if c.isAttaque, let connecteur = c.expression.proposition.connecteur {
                 switch connecteur {
-                case .attaqueUniversel, .attaqueConjonctionGauche, .attaqueConjonctionDroite:
+                case .attaqueConjonctionGauche, .attaqueConjonctionDroite:
                     return true
                 default:
                     break
@@ -220,7 +234,7 @@ public class Partie: CustomStringConvertible, Identifiable {
 
             if c.isDefense, let related = c.relatedStep, let relatedCoup = self.coup(at: related), let relatedConnecteur = relatedCoup.expression.proposition.connecteur {
                 switch relatedConnecteur {
-                case .attaqueExistentiel, .attaqueDisjonction:
+                case .attaqueDisjonction:
                     return true
                 default:
                     break
@@ -374,7 +388,7 @@ public enum Rules {
                          expression: Expression(type: .assertion,
                                                 proposition: consequent,
                                                 joueur: coup.nextJoueur))]
-        case .negation, .implication, .universel, .conjonction, .existentiel, .disjonction, .attaqueNegation, .perdu, .gagne, .repetition:
+        case .negation, .implication, .universel, .conjonction, .existentiel, .disjonction, .attaqueNegation, .perdu, .gagne, .repetition, .negationNoDefense:
             return nil
         }
     }
@@ -450,11 +464,12 @@ public enum Rules {
         case let .attaqueImplication(proposition, _),
              let .attaqueNegation(proposition):
             return attack(coup.copy(proposition: proposition), partie: partie)
-        case .attaqueUniversel, .attaqueConjonctionDroite, .attaqueConjonctionGauche, .attaqueExistentiel, .attaqueDisjonction, .perdu, .gagne, .repetition:
+        case .attaqueUniversel, .attaqueConjonctionDroite, .attaqueConjonctionGauche, .attaqueExistentiel, .attaqueDisjonction, .perdu, .gagne, .repetition, .negationNoDefense:
             return nil
         }
-        // Unreachable: all connecteur cases handled above
     }
+    
+    
 
     static func attack(_ coup: Coup, partie: Partie) -> [Coup] {
         partie.coups
