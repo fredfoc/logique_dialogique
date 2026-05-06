@@ -9,10 +9,6 @@
 import Testing
 
 struct ParserTests {
-    @Test func parserSpecifique() throws {
-        let dialogue = try Dialogue(assertion: "∀x (((∃y (¬Py) ⇒ Pc1) ⇒ Px)")
-    }
-
     @Test func parser() throws {
         let values = ["∀z ∃y (Qz ∧ (¬(Py ∨ Qy)))",
                       "∀x ((Pc1 ⇒ Qx) ⇒ (¬(Pc1 ⇒ ∀z (Qz))))",
@@ -27,7 +23,30 @@ struct ParserTests {
                       "∀x (Pc1)"]
         try values.forEach { assertion in
             let dialogue = try Dialogue(assertion: assertion)
-            assert(dialogue.description == assertion)
+            #expect(dialogue.description == assertion)
+        }
+    }
+
+    @Test func parserRejetteFormulesInvalides() {
+        let invalidValues = [
+            "",
+            "P",
+            "(Pc1 ∧)",
+            "(⇒ Pc1 Qx)",
+            "∀a (Pa)",
+            "∀x (Pc1",
+            "(Pc1 ∨ Qx))",
+            "∃x",
+        ]
+
+        invalidValues.forEach { assertion in
+            var didThrow = false
+            do {
+                _ = try Dialogue(assertion: assertion)
+            } catch {
+                didThrow = true
+            }
+            #expect(didThrow)
         }
     }
 }

@@ -327,12 +327,11 @@ public enum Rules {
     }
 
     static func answer(_ coup: Coup, partie: Partie) -> [Coup] {
-        var values = partie.coups
+        partie.coups
             .filter { $0.isSameJoueur(coup.expression.joueur) }
             .compactMap { answer($0, partie: partie) }
             .flatMap { $0 }
             .filter { !partie.coups.contains($0) }
-        return values ?? [Coup]()
     }
 
     static func attack(_ coup: Coup, partie: Partie) -> [Coup]? {
@@ -405,12 +404,11 @@ public enum Rules {
     }
 
     static func attack(_ coup: Coup, partie: Partie) -> [Coup] {
-        var values = partie.coups
+        partie.coups
             .filter { $0.isSameJoueur(coup.expression.joueur) }
             .compactMap { attack($0, partie: partie) }
             .flatMap { $0 }
             .filter { !partie.coups.contains($0) }
-        return values ?? [Coup]()
     }
 }
 

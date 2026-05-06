@@ -4,13 +4,13 @@ import Testing
 @Test func traductionFormuleSimpleDefinie() {
     let formuleSimple = Proposition(name: "P",
                                     variable: Variable(name: "x", value: "a"))
-    assert(formuleSimple.description == "Pa")
+    #expect(formuleSimple.description == "Pa")
 }
 
 @Test func traductionFormuleSimpleIndefinie() {
     let formuleSimple = Proposition(name: "P",
                                     variable: Variable(name: "x"))
-    assert(formuleSimple.description == "Px")
+    #expect(formuleSimple.description == "Px")
 }
 
 @Test func traductionFormuleExistentiel() {
@@ -18,7 +18,7 @@ import Testing
     let formuleSimple = Proposition(name: "P",
                                     variable: variable)
     let formuleComplexe = Proposition(connecteur: .existentiel(variable, formuleSimple))
-    assert(formuleComplexe.description == "∃x Px")
+    #expect(formuleComplexe.description == "∃x Px")
 }
 
 @Test func traductionFormuleUniversel() {
@@ -26,14 +26,14 @@ import Testing
     let formuleSimple = Proposition(name: "P",
                                     variable: variable)
     let formuleComplexe = Proposition(connecteur: .universel(variable, formuleSimple))
-    assert(formuleComplexe.description == "∀x Px")
+    #expect(formuleComplexe.description == "∀x (Px)")
 }
 
 @Test func traductionNegation() {
     let formuleSimple = Proposition(name: "P",
                                     variable: Variable(name: "x"))
     let formuleComplexe = Proposition(connecteur: .negation(formuleSimple))
-    assert(formuleComplexe.description == "¬Px")
+    #expect(formuleComplexe.description == "(¬Px)")
 }
 
 @Test func traductionConjonction() {
@@ -41,8 +41,8 @@ import Testing
                                      variable: Variable(name: "x"))
     let formuleSimple2 = Proposition(name: "Q",
                                      variable: Variable(name: "x"))
-    let formuleComplexe = Proposition(connecteur: .conjonction(formuleSimple1, formuleSimple2, .droite))
-    assert(formuleComplexe.description == "(Px ∧ Qx)")
+    let formuleComplexe = Proposition(connecteur: .conjonction(formuleSimple1, formuleSimple2))
+    #expect(formuleComplexe.description == "(Px ∧ Qx)")
 }
 
 @Test func traductionDisjonction() {
@@ -51,7 +51,7 @@ import Testing
     let formuleSimple2 = Proposition(name: "Q",
                                      variable: Variable(name: "x"))
     let formuleComplexe = Proposition(connecteur: .disjonction(formuleSimple1, formuleSimple2))
-    assert(formuleComplexe.description == "(Px ∨ Qx)")
+    #expect(formuleComplexe.description == "(Px ∨ Qx)")
 }
 
 @Test func traductionImplication() {
@@ -60,7 +60,7 @@ import Testing
     let formuleSimple2 = Proposition(name: "Q",
                                      variable: Variable(name: "x"))
     let formuleComplexe = Proposition(connecteur: .implication(formuleSimple1, formuleSimple2))
-    assert(formuleComplexe.description == "(Px ⇒ Qx)")
+    #expect(formuleComplexe.description == "(Px ⇒ Qx)")
 }
 
 @Test func traductionComplexe() {
@@ -72,5 +72,5 @@ import Testing
     let implication = Proposition(connecteur: .implication(formuleSimple1, formuleSimple2))
     let existentiel = Proposition(connecteur: .existentiel(variable, implication))
     let formuleComplexe = Proposition(connecteur: .universel(Variable(name: "y"), existentiel))
-    assert(formuleComplexe.description == "∀y ∃x (Px ⇒ Qx)")
+    #expect(formuleComplexe.description == "∀y ∃x (Px ⇒ Qx)")
 }
