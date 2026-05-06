@@ -10,14 +10,14 @@ import SwiftUI
 import UIKit
 
 struct ContentView: View {
-    // samples as a static constant so we can use it for initial state
+    /// samples as a static constant so we can use it for initial state
     private static let samples: [String] = [
         "∀z ∃y (Qz ∧ (¬(Py ∨ Qy)))",
         "∀x ((Pc1 ⇒ Qx) ⇒ (¬(Pc1 ⇒ ∀z (Qz))))",
-        "∀x ((Pc1 ⇒ Qx) ∨ (¬(Pc1 ⇒ ∀z (Qz))))"
+        "∀x ((Pc1 ⇒ Qx) ∨ (¬(Pc1 ⇒ ∀z (Qz))))",
     ]
 
-    // initial dialogue is parsed from the first sample if possible
+    /// initial dialogue is parsed from the first sample if possible
     @State private var dialogue: Dialogue = {
         if let first = ContentView.samples.first, let d = try? Dialogue(assertion: first) {
             return d
@@ -35,31 +35,31 @@ struct ContentView: View {
     @State private var showError: Bool = false
     @State private var errorMessage: String = ""
 
-    // keep a history of successfully parsed dialogues; start with the initial dialogue
+    /// keep a history of successfully parsed dialogues; start with the initial dialogue
     @State private var history: [Dialogue] = []
 
     @State private var selectedSampleIndex: Int = 0
-    // currently selected option shown in the menu label
+    /// currently selected option shown in the menu label
     @State private var selectedOption: String = ""
-    // confirmation alert for clearing history
+    /// confirmation alert for clearing history
     @State private var showingClearAlert: Bool = false
 
-    // animation used when switching dialogues/assertions
+    /// animation used when switching dialogues/assertions
     private let contentAnimation: Animation = .easeInOut(duration: 0.28)
 
-    // unique samples that aren't already present in history
+    /// unique samples that aren't already present in history
     private var uniqueSamples: [String] {
         Self.samples.filter { sample in
             !history.contains(where: { $0.description == sample })
         }
     }
 
-    // UserDefaults key for persisted history (array of assertion strings)
+    /// UserDefaults key for persisted history (array of assertion strings)
     private let historyDefaultsKey = "LogiqueDialogique.history"
-    // UserDefaults key for persisted selected menu option
+    /// UserDefaults key for persisted selected menu option
     private let selectedOptionDefaultsKey = "LogiqueDialogique.selectedOption"
 
-    // Load history from UserDefaults (parsing saved assertion strings). If nothing saved, start with first sample.
+    /// Load history from UserDefaults (parsing saved assertion strings). If nothing saved, start with first sample.
     private func loadHistory() {
         let saved = UserDefaults.standard.stringArray(forKey: historyDefaultsKey) ?? []
         var loaded: [Dialogue] = []
@@ -133,6 +133,7 @@ struct ContentView: View {
     }
 
     // MARK: - Caret-aware text field wrapper
+
     struct CaretTextField: UIViewRepresentable {
         @Binding var text: String
         @Binding var caretPosition: Int?
@@ -149,7 +150,7 @@ struct ContentView: View {
             return tf
         }
 
-        func updateUIView(_ uiView: UITextField, context: Context) {
+        func updateUIView(_ uiView: UITextField, context _: Context) {
             if uiView.text != text {
                 uiView.text = text
             }
@@ -159,18 +160,22 @@ struct ContentView: View {
             }
         }
 
-        func makeCoordinator() -> Coordinator { Coordinator(self) }
+        func makeCoordinator() -> Coordinator {
+            Coordinator(self)
+        }
 
         final class Coordinator: NSObject, UITextFieldDelegate {
             var parent: CaretTextField
-            init(_ p: CaretTextField) { parent = p }
+            init(_ p: CaretTextField) {
+                parent = p
+            }
 
             @objc func editingChanged(_ sender: UITextField) {
                 parent.text = sender.text ?? ""
                 updateCaret(from: sender)
             }
 
-            @objc func editingDidEndOnExit(_ sender: UITextField) {
+            @objc func editingDidEndOnExit(_: UITextField) {
                 parent.onCommit()
             }
 
@@ -196,7 +201,7 @@ struct ContentView: View {
         }
     }
 
-    // Insert a symbol at caret position (or append if caret unknown)
+    /// Insert a symbol at caret position (or append if caret unknown)
     private func insertSymbolAtCaret(_ symbol: String) {
         let idx = caretPosition ?? assertion.count
         if idx < 0 || idx > assertion.count { caretPosition = assertion.count; return }
@@ -389,7 +394,7 @@ struct ContentView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .alert("Clear history?", isPresented: $showingClearAlert) {
-            Button("Cancel", role: .cancel) { }
+            Button("Cancel", role: .cancel) {}
             Button("Clear", role: .destructive) {
                 clearHistory()
             }

@@ -39,7 +39,7 @@ struct ParserTests {
             "∃x",
         ]
 
-        invalidValues.forEach { assertion in
+        for assertion in invalidValues {
             var didThrow = false
             do {
                 _ = try Dialogue(assertion: assertion)

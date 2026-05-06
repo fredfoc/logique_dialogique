@@ -29,7 +29,7 @@ struct CoupView: View {
                         Text(coup.display)
                     }
                     Text(coup.debug).font(.system(size: 10))
-                    //Text(coup.debugExpression).font(.system(size: 10))
+                    // Text(coup.debugExpression).font(.system(size: 10))
                 }
                 Spacer()
                 if let relatedStep = coup.relatedStep, coup.displayStep {
@@ -53,7 +53,7 @@ struct CoupView: View {
                         Text(coup.display)
                     }
                     Text(coup.debug).font(.system(size: 9))
-                    //Text(coup.debugExpression).font(.system(size: 10))
+                    // Text(coup.debugExpression).font(.system(size: 10))
                 }
                 if coup.displayStep {
                     Text("\(coup.step)")

@@ -126,7 +126,7 @@ public extension Coup {
     var debug: String {
         return "\(role.description)"
     }
-    
+
     var debugExpression: String {
         "\(expression.description)"
     }

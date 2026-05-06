@@ -201,13 +201,13 @@ public class Partie: CustomStringConvertible, Identifiable {
 
 public enum Rules {
     static func dialogue(_ coups: [Coup], _ parties: inout [Partie], constants: [String]) {
-        var partie = Partie(index: parties.count + 1, coups: coups, constants: constants)
+        let partie = Partie(index: parties.count + 1, coups: coups, constants: constants)
         parties.append(partie)
         evaluatePartie(partie, &parties)
     }
 
     static func newPartie(from partie: Partie, _ coup: Coup, _ parties: inout [Partie]) {
-        var partie = Partie(index: parties.count + 1, coups: partie.coups, constants: partie.constants)
+        let partie = Partie(index: parties.count + 1, coups: partie.coups, constants: partie.constants)
         parties.append(partie)
         partie.coups.append(coup)
         if coup.shouldBump {
@@ -219,7 +219,7 @@ public enum Rules {
     static func evaluatePartie(_ partie: Partie, _ parties: inout [Partie]) {
         var nextCoups = Rules.evaluateCoup(partie: partie)
         while !nextCoups.isEmpty {
-            var nextCoup = nextCoups.removeFirst()
+            let nextCoup = nextCoups.removeFirst()
             nextCoups.forEach { coup in newPartie(from: partie, coup, &parties) }
             partie.coups.append(nextCoup)
             if nextCoup.shouldBump {
@@ -243,9 +243,9 @@ public enum Rules {
         }
     }
 
-    static func filterValidCoup(_ isProposant: Bool,
-                                coups: [Coup],
-                                partie: Partie) -> [Coup]
+    static func socraticRule(_ isProposant: Bool,
+                             coups: [Coup],
+                             partie: Partie) -> [Coup]
     {
         guard isProposant else {
             return coups
@@ -262,16 +262,15 @@ public enum Rules {
     static func evaluateCoup(partie: Partie) -> [Coup] {
         let coup = partie.coups.last!
         let coups = answer(coup, partie: partie) + attack(coup, partie: partie)
-        return filterValidCoup(coup.nextJoueur.isProposant,
-                               coups: coups,
-                               partie: partie)
+        return socraticRule(coup.nextJoueur.isProposant,
+                            coups: coups,
+                            partie: partie)
     }
 
     static func answer(_ coup: Coup, partie: Partie) -> [Coup]? {
         guard coup.isAttaque, let propositionComplexe = coup.expression.proposition.connecteur else {
             return nil
         }
-        let relatedCoup = partie.coup(at: coup.relatedStep)
         switch propositionComplexe {
         case let .conjonctionDroite(proposition, _), let .conjonctionGauche(proposition, _):
             return [Coup(relatedStep: coup.step,
@@ -387,7 +386,7 @@ public enum Rules {
             } else {
                 appliedVariable = Variable(name: variable.name, value: partie.nextVariable)
             }
-            
+
             return [Coup(relatedStep: coup.step,
                          step: partie.nextStep,
                          role: .attaque(coup.expression.proposition),
@@ -395,7 +394,7 @@ public enum Rules {
                                                 proposition: Proposition(connecteur: .attaqueUniversel(appliedVariable, proposition)),
                                                 joueur: coup.nextJoueur))]
         case let .attaqueImplication(proposition, _),
-            let .attaqueNegation(proposition):
+             let .attaqueNegation(proposition):
             return attack(coup.copy(proposition: proposition), partie: partie)
         case .attaqueUniversel, .conjonctionDroite, .conjonctionGauche, .attaqueExistentiel, .attaqueDisjonction, .perdu, .gagne, .repetition:
             return nil
