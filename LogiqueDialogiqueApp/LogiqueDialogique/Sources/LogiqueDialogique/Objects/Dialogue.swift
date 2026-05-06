@@ -17,43 +17,64 @@ public class Dialogue: CustomStringConvertible {
     }
 
     public let assertion: Proposition?
-    public var parties: [Partie] = []
+    private var internalParties: [Partie] = []
     private var constants: [String]
+    
+    public var parties: [Partie] {
+        // If the proposant has a winning partie for which the opposante has no choices,
+        // return only that partie (strategy found). Otherwise return all generated parties.
+        if let winningPartieNoChoice = internalParties.first(where: { $0.isWinning && !$0.opposanteHadChoices }) {
+            return [winningPartieNoChoice]
+        }
+        return internalParties
+    }
+    
 
     public init(assertion: String) throws {
         let result = try evaluate(assertion)
         self.assertion = result.assertion
         constants = result.constants
-        refresh()
+        generate()
     }
 
-    public func refresh() {
+    public func generate() {
         guard let assertion else {
             return
         }
-        var firstCoup = Coup(relatedStep: nil,
+        let firstCoup = Coup(relatedStep: nil,
                              step: 0,
                              role: .unknown,
                              expression: Expression(type: .assertion,
                                                     proposition: assertion,
                                                     joueur: .Proposant))
-        var secondCoup = Coup(relatedStep: nil,
+        let secondCoup = Coup(relatedStep: nil,
                               step: 1,
                               role: .unknown,
                               expression: Expression(type: .regle,
                                                      proposition: Proposition(connecteur: .repetition(1)),
                                                      joueur: .Opposante))
-        var troisiemeCoup = Coup(relatedStep: 1,
+        let troisiemeCoup = Coup(relatedStep: 1,
                                  step: 2,
                                  role: .unknown,
                                  expression: Expression(type: .regle,
                                                         proposition: Proposition(connecteur: .repetition(2)),
                                                         joueur: .Proposant))
-        Rules.dialogue([firstCoup, secondCoup, troisiemeCoup], &parties, constants: constants)
+        Rules.dialogue([firstCoup, secondCoup, troisiemeCoup], &internalParties, constants: constants)
     }
 
     public var hasStrategie: Bool {
-        return parties.filter { !$0.isWinning }.count == 0
+        // 1) Si existe une partie gagnée par le proposant et l'opposante n'a aucun choix possible -> stratégie
+        if internalParties.contains(where: { $0.isWinning && !$0.opposanteHadChoices }) {
+            return true
+        }
+
+        // 2) Si pour toutes les parties où l'opposante a un choix, le proposant gagne -> stratégie
+        let partiesAvecChoix = internalParties.filter { $0.opposanteHadChoices }
+        if !partiesAvecChoix.isEmpty && partiesAvecChoix.allSatisfy({ $0.isWinning }) {
+            return true
+        }
+
+        return false
     }
 }
 
@@ -175,6 +196,39 @@ public class Partie: CustomStringConvertible, Identifiable {
     var isWinning: Bool {
         coups.filter { $0.isPerdu }.first?.isOpposante ?? false
     }
+    
+    var opposanteHadChoices: Bool {
+        opposanteHasChoice()
+    }
+
+    // Extracted helper to detect whether the Opposante had a choice in the sequence of coups.
+    // Opposante has choices if she:
+    // - attacks a universel
+    // - attacks a disjonction
+    // - defends an existentiel
+    // - defends a disjonction
+    fileprivate func opposanteHasChoice() -> Bool {
+        for c in coups where c.isOpposante {
+            if c.isAttaque, let connecteur = c.expression.proposition.connecteur {
+                switch connecteur {
+                case .attaqueUniversel, .attaqueConjonctionGauche, .attaqueConjonctionDroite:
+                    return true
+                default:
+                    break
+                }
+            }
+
+            if c.isDefense, let related = c.relatedStep, let relatedCoup = self.coup(at: related), let relatedConnecteur = relatedCoup.expression.proposition.connecteur {
+                switch relatedConnecteur {
+                case .attaqueExistentiel, .attaqueDisjonction:
+                    return true
+                default:
+                    break
+                }
+            }
+        }
+        return false
+    }
 
     func associatedAnswer(of coup: Coup) -> Coup? {
         coups.filter { $0.isDefense }
@@ -272,7 +326,7 @@ public enum Rules {
             return nil
         }
         switch propositionComplexe {
-        case let .conjonctionDroite(proposition, _), let .conjonctionGauche(proposition, _):
+        case let .attaqueConjonctionDroite(proposition, _), let .attaqueConjonctionGauche(proposition, _):
             return [Coup(relatedStep: coup.step,
                          step: partie.nextStep,
                          role: .defense(coup.expression.proposition),
@@ -343,13 +397,13 @@ public enum Rules {
                          step: partie.nextStep,
                          role: .attaque(coup.expression.proposition),
                          expression: Expression(type: .question,
-                                                proposition: Proposition(connecteur: .conjonctionDroite(prop2, coup.expression.proposition)),
+                                                proposition: Proposition(connecteur: .attaqueConjonctionDroite(prop2, coup.expression.proposition)),
                                                 joueur: coup.nextJoueur)),
                     Coup(relatedStep: coup.step,
                          step: partie.nextStep,
                          role: .attaque(coup.expression.proposition),
                          expression: Expression(type: .question,
-                                                proposition: Proposition(connecteur: .conjonctionGauche(prop1, coup.expression.proposition)),
+                                                proposition: Proposition(connecteur: .attaqueConjonctionGauche(prop1, coup.expression.proposition)),
                                                 joueur: coup.nextJoueur))]
         case let .disjonction(prop1, prop2):
             return [Coup(relatedStep: coup.step,
@@ -396,10 +450,10 @@ public enum Rules {
         case let .attaqueImplication(proposition, _),
              let .attaqueNegation(proposition):
             return attack(coup.copy(proposition: proposition), partie: partie)
-        case .attaqueUniversel, .conjonctionDroite, .conjonctionGauche, .attaqueExistentiel, .attaqueDisjonction, .perdu, .gagne, .repetition:
+        case .attaqueUniversel, .attaqueConjonctionDroite, .attaqueConjonctionGauche, .attaqueExistentiel, .attaqueDisjonction, .perdu, .gagne, .repetition:
             return nil
         }
-        return nil
+        // Unreachable: all connecteur cases handled above
     }
 
     static func attack(_ coup: Coup, partie: Partie) -> [Coup] {

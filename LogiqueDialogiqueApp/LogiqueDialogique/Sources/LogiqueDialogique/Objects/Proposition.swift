@@ -10,37 +10,37 @@ import Foundation
 public indirect enum Connecteur: CustomStringConvertible, CustomDebugStringConvertible {
     public var debugDescription: String {
         switch self {
-        case let .conjonction(proposition, proposition2):
+        case .conjonction(_, _):
             "conjonction"
-        case let .conjonctionDroite(proposition, proposition2):
+        case .attaqueConjonctionDroite(_, _):
             "attaque Conjonction Droite"
-        case let .conjonctionGauche(proposition, proposition2):
+        case .attaqueConjonctionGauche(_, _):
             "attaque Conjonction Gauche"
-        case let .disjonction(proposition, proposition2):
+        case .disjonction(_, _):
             "disjonction"
-        case let .attaqueDisjonction(proposition, proposition2):
+        case .attaqueDisjonction(_, _):
             "attaque Disjonction"
-        case let .negation(proposition):
+        case .negation(_):
             "negation"
-        case let .attaqueNegation(proposition):
+        case .attaqueNegation(_):
             "attaque Negation"
-        case let .implication(proposition, proposition2):
+        case .implication(_, _):
             "impliquation"
-        case let .attaqueImplication(proposition, proposition2):
+        case .attaqueImplication(_, _):
             "attaque Implication"
-        case let .universel(variable, proposition):
+        case .universel(_, _):
             "universel"
-        case let .attaqueUniversel(variable, proposition):
+        case .attaqueUniversel(_, _):
             "attaque Universel"
-        case let .existentiel(variable, proposition):
+        case .existentiel(_, _):
             "existentiel"
-        case let .attaqueExistentiel(variable, proposition):
+        case .attaqueExistentiel(_, _):
             "attaque Existentiel"
         case .perdu:
             ""
         case .gagne:
             ""
-        case let .repetition(int):
+        case .repetition(_):
             ""
         }
     }
@@ -62,9 +62,9 @@ public indirect enum Connecteur: CustomStringConvertible, CustomDebugStringConve
             return "∀\(variable.name) \(proposition.description)"
         case let .existentiel(variable, proposition):
             return "∃\(variable.name) \(proposition.description)"
-        case .conjonctionDroite:
+        case .attaqueConjonctionDroite:
             return "-∧2"
-        case .conjonctionGauche:
+        case .attaqueConjonctionGauche:
             return "-∧1"
         case let .attaqueUniversel(variable, _):
             return "∀\(variable.name)/\(variable.value ?? "")"
@@ -91,7 +91,7 @@ public indirect enum Connecteur: CustomStringConvertible, CustomDebugStringConve
             proposition.description
         case let .attaqueNegation(proposition):
             proposition.description
-        case let .conjonctionDroite(_, proposition), let .conjonctionGauche(_, proposition):
+        case let .attaqueConjonctionDroite(_, proposition), let .attaqueConjonctionGauche(_, proposition):
             proposition.description
         default:
             description
@@ -99,8 +99,8 @@ public indirect enum Connecteur: CustomStringConvertible, CustomDebugStringConve
     }
 
     case conjonction(Proposition, Proposition)
-    case conjonctionDroite(Proposition, Proposition)
-    case conjonctionGauche(Proposition, Proposition)
+    case attaqueConjonctionDroite(Proposition, Proposition)
+    case attaqueConjonctionGauche(Proposition, Proposition)
     case disjonction(Proposition, Proposition)
     case attaqueDisjonction(Proposition, Proposition)
     case negation(Proposition)
@@ -134,10 +134,10 @@ public indirect enum Connecteur: CustomStringConvertible, CustomDebugStringConve
             .universel(variable, proposition.evaluate(newVariable))
         case let .existentiel(variable, proposition):
             .existentiel(variable, proposition.evaluate(newVariable))
-        case let .conjonctionDroite(proposition, prop):
-            .conjonctionDroite(proposition.evaluate(newVariable), prop)
-        case let .conjonctionGauche(proposition, prop):
-            .conjonctionGauche(proposition.evaluate(newVariable), prop)
+        case let .attaqueConjonctionDroite(proposition, prop):
+            .attaqueConjonctionDroite(proposition.evaluate(newVariable), prop)
+        case let .attaqueConjonctionGauche(proposition, prop):
+            .attaqueConjonctionGauche(proposition.evaluate(newVariable), prop)
         case let .attaqueUniversel(variable, proposition):
             .attaqueUniversel(variable, proposition.evaluate(newVariable))
         case let .attaqueImplication(prop1, prop2):

@@ -176,4 +176,118 @@ struct Test {
         #expect(nextCoups[0].expression.type == .question)
         #expect(nextCoups[0].prop == "∀x/c3")
     }
+
+    @Test func opposanteHadChoices_detecte_attaque_universel() {
+        let inner = Proposition(name: "P", variable: Variable(name: "x"))
+        let attackProp = Proposition(connecteur: .attaqueUniversel(Variable(name: "x", value: "c1"), inner))
+        let coup = Coup(relatedStep: nil,
+                        step: 0,
+                        role: .attaque(attackProp),
+                        expression: Expression(type: .question, proposition: attackProp, joueur: .Opposante))
+        let partie = Partie(index: 0, coups: [coup], constants: [])
+
+        #expect(partie.opposanteHadChoices)
+    }
+
+    @Test func opposanteHadChoices_detecte_attaque_attaqueConjonctionDroite() {
+        let p1 = Proposition(name: "P", variable: Variable(name: "x"))
+        let p2 = Proposition(name: "Q", variable: Variable(name: "x"))
+        let attackProp = Proposition(connecteur: .attaqueConjonctionDroite(p1, p2))
+        let coup = Coup(relatedStep: nil,
+                        step: 0,
+                        role: .attaque(attackProp),
+                        expression: Expression(type: .question, proposition: attackProp, joueur: .Opposante))
+        let partie = Partie(index: 0, coups: [coup], constants: [])
+
+        #expect(partie.opposanteHadChoices)
+    }
+    
+    @Test func opposanteHadChoices_detecte_attaque_attaqueConjonctionGauche() {
+        let p1 = Proposition(name: "P", variable: Variable(name: "x"))
+        let p2 = Proposition(name: "Q", variable: Variable(name: "x"))
+        let attackProp = Proposition(connecteur: .attaqueConjonctionGauche(p1, p2))
+        let coup = Coup(relatedStep: nil,
+                        step: 0,
+                        role: .attaque(attackProp),
+                        expression: Expression(type: .question, proposition: attackProp, joueur: .Opposante))
+        let partie = Partie(index: 0, coups: [coup], constants: [])
+
+        #expect(partie.opposanteHadChoices)
+    }
+
+
+    @Test func opposanteHadChoices_detecte_defense_existentiel_et_disjonction() {
+        // attaque existentiel puis defense par opposante
+        let inner = Proposition(name: "P", variable: Variable(name: "x"))
+        let attack = Proposition(connecteur: .attaqueExistentiel(Variable(name: "x"), inner))
+        let attackCoup = Coup(relatedStep: nil,
+                              step: 0,
+                              role: .attaque(attack),
+                              expression: Expression(type: .question, proposition: attack, joueur: .Proposant))
+        let defenseCoup = Coup(relatedStep: 0,
+                               step: 1,
+                               role: .defense(attack),
+                               expression: Expression(type: .assertion, proposition: inner, joueur: .Opposante))
+
+        let partie1 = Partie(index: 0, coups: [attackCoup, defenseCoup], constants: [])
+        #expect(partie1.opposanteHadChoices)
+
+        // attaque disjonction puis defense par opposante
+        let p1 = Proposition(name: "P", variable: Variable(name: "x"))
+        let p2 = Proposition(name: "Q", variable: Variable(name: "x"))
+        let attack2 = Proposition(connecteur: .attaqueDisjonction(p1, p2))
+        let attackCoup2 = Coup(relatedStep: nil,
+                               step: 0,
+                               role: .attaque(attack2),
+                               expression: Expression(type: .question, proposition: attack2, joueur: .Proposant))
+        let defenseCoup2 = Coup(relatedStep: 0,
+                                step: 1,
+                                role: .defense(attack2),
+                                expression: Expression(type: .assertion, proposition: p1, joueur: .Opposante))
+
+        let partie2 = Partie(index: 0, coups: [attackCoup2, defenseCoup2], constants: [])
+        #expect(partie2.opposanteHadChoices)
+    }
+
+    @Test func opposanteHadChoices_false_quand_aucun_choice() {
+        // Opposante n'a que des affirmations simples -> pas de choix
+        let prop = Proposition(name: "P", variable: Variable(name: "x"))
+        let coup = Coup(relatedStep: nil,
+                        step: 0,
+                        role: .unknown,
+                        expression: Expression(type: .assertion, proposition: prop, joueur: .Opposante))
+        let partie = Partie(index: 0, coups: [coup], constants: [])
+
+        #expect(!partie.opposanteHadChoices)
+    }
+
+    @Test func dialogue_hasStrategie_condition1() throws {
+        // partie gagnée par le proposant et opposante n'a aucun choix
+        let dialogue = try Dialogue(assertion: "((Pc1 ⇒ Qc1) ⇒ ((¬(Qc1)) ⇒ (¬(Pc1))))")
+        #expect(dialogue.hasStrategie)
+    }
+
+    @Test func dialogue_hasStrategie_condition2() throws {
+        // toutes les parties où l'opposante a un choix sont gagnées par le proposant
+        let dialogue = try Dialogue(assertion: "∀x ((Px ⇒ Qc1) ⇒ ((¬(Qc1)) ⇒ (¬(Px))))")
+        #expect(dialogue.hasStrategie)
+    }
+
+    @Test func dialogue_hasStrategie_false_when_opposante_has_choice_and_proposant_loses() throws {
+        // partie où l'opposante a un choix mais le proposant ne gagne -> pas de stratégie
+        let dialogue = try Dialogue(assertion: "(Pc1 ⇒ Qc1)")
+        #expect(!dialogue.hasStrategie)
+    }
+    
+    @Test func dialogue_parties_condition1() throws {
+        // partie gagnée par le proposant et opposante n'a aucun choix
+        let dialogue = try Dialogue(assertion: "((Pc1 ∧ Qc1) ⇒ Qc1)")
+        #expect(dialogue.hasStrategie)
+        #expect(dialogue.parties.count == 1)
+    }
+    
+    @Test func dialogue_parties_condition2() throws {
+        let dialogue = try Dialogue(assertion: "(∀x (Px ∧ Qx) ⇒ (Qc1 ∧ Pc1))")
+        #expect(dialogue.parties.count > 1)
+    }
 }
